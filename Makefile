@@ -1,7 +1,10 @@
-.PHONY: install lint format test
+.PHONY: install data lint format test
 
 install:
 	uv sync
+
+data:
+	uv run python -m churn.data
 
 lint:
 	uv run ruff check .
