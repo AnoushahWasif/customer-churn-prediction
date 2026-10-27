@@ -19,12 +19,24 @@ The goal isn't only a good score. It's a model a retention team could act on: th
 
 Full notebook: [notebooks/02_eda.ipynb](notebooks/02_eda.ipynb).
 
+## Results so far
+
+Stratified 80/20 split, 1,409 test customers, 374 of them churned. Threshold 0.5 for now (Day 8 picks it from costs).
+
+| Model | Churners caught | Missed | Wasted offers | Accuracy | ROC-AUC |
+|-------|-----------------|--------|---------------|----------|---------|
+| Predict "nobody churns" | 0% | 374 | 0 | 73.5% | 0.50 |
+| Logistic regression | 55.6% | 166 | 109 | 80.5% | 0.842 |
+| Logistic regression, class-balanced | 78.6% | 80 | 287 | 74.0% | 0.842 |
+
+The do-nothing baseline scores 73.5% accuracy, which is why accuracy isn't the metric here. Balancing the classes halves the missed churners at the cost of about 180 more discount offers. Whether that trade is worth it depends on what each mistake costs, which is Day 8.
+
 ## Plan
 
 - [x] Download script and data dictionary
 - [x] EDA: churn by contract type, tenure, charges, services
 - [x] Preprocessing pipeline (`ColumnTransformer`) with tests
-- [ ] Baseline and logistic regression
+- [x] Baseline and logistic regression
 - [ ] Decision tree with cross-validated depth
 - [ ] Model comparison (ROC/PR curves, confusion matrices)
 - [ ] Cost-based threshold, and a look at the customers each model gets wrong
