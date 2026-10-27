@@ -1,0 +1,38 @@
+[
+  {
+    "model": "baseline_prior",
+    "threshold": 0.5,
+    "recall": 0.0,
+    "precision": 0.0,
+    "f1": 0.0,
+    "accuracy": 0.7345635202271115,
+    "missed_churners": 374,
+    "wasted_offers": 0,
+    "roc_auc": 0.5,
+    "pr_auc": 0.2654364797728886
+  },
+  {
+    "model": "logistic_regression",
+    "threshold": 0.5,
+    "recall": 0.5561497326203209,
+    "precision": 0.6561514195583596,
+    "f1": 0.6020260492040521,
+    "accuracy": 0.8048261178140526,
+    "missed_churners": 166,
+    "wasted_offers": 109,
+    "roc_auc": 0.8423570745821386,
+    "pr_auc": 0.6352959073552175
+  },
+  {
+    "model": "logistic_regression_balanced",
+    "threshold": 0.5,
+    "recall": 0.786096256684492,
+    "precision": 0.5060240963855421,
+    "f1": 0.6157068062827226,
+    "accuracy": 0.7395315826827538,
+    "missed_churners": 80,
+    "wasted_offers": 287,
+    "roc_auc": 0.8418713994161564,
+    "pr_auc": 0.634415761063956
+  }
+]
