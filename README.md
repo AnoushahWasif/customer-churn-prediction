@@ -23,7 +23,7 @@ Full notebook: [notebooks/02_eda.ipynb](notebooks/02_eda.ipynb).
 
 - [x] Download script and data dictionary
 - [x] EDA: churn by contract type, tenure, charges, services
-- [ ] Preprocessing pipeline (`ColumnTransformer`) with tests
+- [x] Preprocessing pipeline (`ColumnTransformer`) with tests
 - [ ] Baseline and logistic regression
 - [ ] Decision tree with cross-validated depth
 - [ ] Model comparison (ROC/PR curves, confusion matrices)
