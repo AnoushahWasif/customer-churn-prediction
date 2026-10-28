@@ -28,8 +28,21 @@ Stratified 80/20 split, 1,409 test customers, 374 of them churned. Threshold 0.5
 | Predict "nobody churns" | 0% | 374 | 0 | 73.5% | 0.50 |
 | Logistic regression | 55.6% | 166 | 109 | 80.5% | 0.842 |
 | Logistic regression, class-balanced | 78.6% | 80 | 287 | 74.0% | 0.842 |
+| Decision tree, depth 6, class-balanced | 78.1% | 82 | 257 | 75.9% | 0.838 |
 
 The do-nothing baseline scores 73.5% accuracy, which is why accuracy isn't the metric here. Balancing the classes halves the missed churners at the cost of about 180 more discount offers. Whether that trade is worth it depends on what each mistake costs, which is Day 8.
+
+### Decision tree
+
+Depth and minimum leaf size were picked by 5-fold cross-validation on the training set only (27 combinations, scored on ROC-AUC). Best: depth 6, at least 50 customers per leaf.
+
+![Cross-validated ROC-AUC by tree depth](reports/figures/tree_cv_depth.png)
+
+A tree allowed to split down to single customers scores 0.66 in cross-validation: it memorises the training rows. Keeping leaves at 50+ customers holds it at about 0.83 from depth 5 onwards, however deep the tree is allowed to grow.
+
+![Top of the chosen tree](reports/figures/tree_top.png)
+
+The first splits are the same drivers the EDA found: contract type, then monthly charges or fiber internet, then tenure. The tree catches about as many churners as balanced logistic regression with 30 fewer wasted offers, but ranks customers slightly worse overall (ROC-AUC 0.838 vs 0.842). The `value` pairs in the plot are class-weighted, so they read as balanced proportions, not raw counts.
 
 ## Plan
 
@@ -37,7 +50,7 @@ The do-nothing baseline scores 73.5% accuracy, which is why accuracy isn't the m
 - [x] EDA: churn by contract type, tenure, charges, services
 - [x] Preprocessing pipeline (`ColumnTransformer`) with tests
 - [x] Baseline and logistic regression
-- [ ] Decision tree with cross-validated depth
+- [x] Decision tree with cross-validated depth
 - [ ] Model comparison (ROC/PR curves, confusion matrices)
 - [ ] Cost-based threshold, and a look at the customers each model gets wrong
 - [ ] CLI and CI

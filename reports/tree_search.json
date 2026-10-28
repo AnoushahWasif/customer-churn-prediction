@@ -1,0 +1,7 @@
+{
+  "best_params": {
+    "max_depth": 6,
+    "min_samples_leaf": 50
+  },
+  "best_cv_roc_auc": 0.8322568734343593
+}

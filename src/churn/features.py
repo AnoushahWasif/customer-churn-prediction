@@ -33,10 +33,11 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def build_preprocessor() -> Pipeline:
+def build_preprocessor(scale: bool = True) -> Pipeline:
+    # Trees don't need scaling, and unscaled splits read as "tenure <= 17 months".
     columns = ColumnTransformer(
         [
-            ("scaled", StandardScaler(), SCALED),
+            ("numeric", StandardScaler() if scale else "passthrough", SCALED),
             ("binary", "passthrough", BINARY),
             (
                 "onehot",
