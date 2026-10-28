@@ -34,5 +34,17 @@
     "wasted_offers": 287,
     "roc_auc": 0.8418713994161564,
     "pr_auc": 0.634415761063956
+  },
+  {
+    "model": "decision_tree",
+    "threshold": 0.5,
+    "recall": 0.7807486631016043,
+    "precision": 0.5318761384335154,
+    "f1": 0.6327193932827736,
+    "accuracy": 0.759403832505323,
+    "missed_churners": 82,
+    "wasted_offers": 257,
+    "roc_auc": 0.8379989149810122,
+    "pr_auc": 0.6269803446156028
   }
 ]

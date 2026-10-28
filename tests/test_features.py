@@ -84,7 +84,7 @@ def test_scaler_learns_from_training_rows_only():
     train, test = make_rows(300, seed=1), make_rows(300, seed=2)
     test["tenure"] = test["tenure"] + 1000  # wildly different test data
     pre = build_preprocessor().fit(train)
-    scaler = pre[-1].named_transformers_["scaled"]
+    scaler = pre[-1].named_transformers_["numeric"]
     assert scaler.mean_[0] == pytest.approx(train["tenure"].mean())
 
 
