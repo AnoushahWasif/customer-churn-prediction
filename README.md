@@ -2,11 +2,39 @@
 
 [![CI](https://github.com/AnoushahWasif/customer-churn-prediction/actions/workflows/ci.yml/badge.svg)](https://github.com/AnoushahWasif/customer-churn-prediction/actions/workflows/ci.yml)
 
-> Work in progress. Started October 2026.
-
 Predicting which customers of a telecom company are likely to cancel, using the public IBM Telco Customer Churn dataset (7,043 customers, 21 columns, about 26% churned).
 
 The goal isn't only a good score. It's a model a retention team could act on: the main metric weighs a missed churner as more costly than a wasted discount offer, and the decision threshold comes from that cost, not the default 0.5.
+
+**Result:** with a discount offer costing 1 and a lost customer 5, logistic regression with a cost-picked threshold catches 335 of 374 test churners and cuts the cost from 1,147 (at the default 0.5) to 937, a third less than offering everyone a discount. The 31 churners it still misses look like loyal long-term customers, and nothing in this dataset hints that they'll leave.
+
+## Quick start
+
+Needs Python 3.12 and [uv](https://docs.astral.sh/uv/).
+
+```bash
+make install
+make data                     # downloads the CSV, pinned to a commit and checked by SHA-256
+uv run churn train            # fits the model, picks its threshold from costs, saves models/
+uv run churn score customers.csv --out scores.csv
+uv run churn reports          # rebuilds every figure and JSON in reports/
+make test                     # 102 tests on generated customers, no download needed
+```
+
+## How it fits together
+
+```mermaid
+flowchart LR
+    A[IBM Telco CSV<br/>SHA-256 checked] --> B[stratified 80/20 split]
+    B --> C[pipeline: features,<br/>scaling, one-hot]
+    C --> D[baseline, logistic regression,<br/>balanced LR, CV-tuned tree]
+    D --> E[threshold from costs<br/>on out-of-fold scores]
+    E --> F[model.joblib<br/>+ manifest with hash]
+    F -->|hash checked<br/>before loading| G[churn score CLI]
+    D --> H[reports/ figures + JSON]
+```
+
+Design decisions and a short threat model are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Early findings (EDA)
 
@@ -21,7 +49,7 @@ The goal isn't only a good score. It's a model a retention team could act on: th
 
 Full notebook: [notebooks/02_eda.ipynb](notebooks/02_eda.ipynb).
 
-## Results so far
+## Results at the default threshold
 
 Stratified 80/20 split, 1,409 test customers, 374 of them churned. This table uses the default 0.5 threshold; [Picking the threshold from costs](#picking-the-threshold-from-costs) below replaces it.
 
@@ -106,17 +134,7 @@ At these thresholds, 31 of the 374 test churners are missed by all three models,
 
 The missed churners look like loyal customers: on contracts, years in, paying less. Nothing in these 19 columns warns about them, so a different model won't fix it. Catching them would need other data, such as support calls, recent price changes or usage drops.
 
-## Using it
-
-Needs Python 3.12 and [uv](https://docs.astral.sh/uv/).
-
-```bash
-make install
-make data                     # downloads the CSV, pinned to a commit and checked by SHA-256
-uv run churn train            # fits the model, picks its threshold from costs, saves models/
-uv run churn score customers.csv --out scores.csv
-uv run churn reports          # rebuilds every figure and JSON in reports/
-```
+## The command-line tool
 
 `churn train --offer-cost 1 --missed-cost 10` picks the threshold for different costs. The served model is plain logistic regression: it costs about the same as the balanced one (937 vs 935 on the test set) and its scores read as probabilities.
 
@@ -136,32 +154,28 @@ What `score` guards against:
 
 CI runs ruff and the tests, trains and scores on the real data, checks that a tampered model is refused, audits dependencies with pip-audit, and scans the history with Gitleaks.
 
-## Plan
+## Limitations
 
-- [x] Download script and data dictionary
-- [x] EDA: churn by contract type, tenure, charges, services
-- [x] Preprocessing pipeline (`ColumnTransformer`) with tests
-- [x] Baseline and logistic regression
-- [x] Decision tree with cross-validated depth
-- [x] Model comparison (ROC/PR curves, confusion matrices)
-- [x] Cost-based threshold, and a look at the customers each model gets wrong
-- [x] CLI and CI
+- **The costs are made up.** 1 for an offer and 5 for a lost customer are stated assumptions, not a real company's numbers. Change them with `--offer-cost` and `--missed-cost`; the threshold moves a lot (0.56 at 2:1, 0.05 at 20:1).
+- **An offer is assumed to always work.** In reality some churners leave anyway, which makes offers worth less and pushes the threshold up.
+- **One snapshot.** The data has no dates, so there's no check that a model trained on last year still works this year.
+- **Small and old dataset.** 7,043 customers from IBM's sample data. Patterns like "electronic check churns more" may not carry over to a real company.
+- **The tree's threshold doesn't transfer well** (46 distinct scores), which is one reason the served model is logistic regression.
+- **Correlated inputs** make single logistic regression weights misleading (`TotalCharges` vs `tenure`).
+
+## Project structure
+
+```
+src/churn/       data download, features, training, comparison, threshold, model store, CLI
+tests/           102 pytest tests on generated customers (no download needed)
+notebooks/       first look and EDA, dead ends included
+reports/         JSON results and figures, rebuilt by `churn reports`
+docs/            ARCHITECTURE.md with decisions and threat model
+```
 
 ## Stack
 
-Python 3.12, pandas, scikit-learn, matplotlib, pytest, ruff, uv.
-
-## Quick start
-
-```bash
-uv sync
-make lint
-make test
-```
-
-## Architecture
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Python 3.12, pandas, scikit-learn, matplotlib, pytest, ruff, uv. CI on GitHub Actions with pip-audit and Gitleaks.
 
 ## License
 
