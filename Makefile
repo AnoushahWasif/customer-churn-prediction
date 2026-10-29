@@ -1,10 +1,16 @@
-.PHONY: install data lint format test
+.PHONY: install data train reports lint format test
 
 install:
 	uv sync
 
 data:
 	uv run python -m churn.data
+
+train:
+	uv run churn train
+
+reports:
+	uv run churn reports
 
 lint:
 	uv run ruff check .
