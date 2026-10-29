@@ -1,0 +1,56 @@
+{
+  "confusion_at_0.5": {
+    "logistic_regression": {
+      "stayed_kept": 926,
+      "wasted_offers": 109,
+      "missed_churners": 166,
+      "churners_caught": 208
+    },
+    "logistic_regression_balanced": {
+      "stayed_kept": 748,
+      "wasted_offers": 287,
+      "missed_churners": 80,
+      "churners_caught": 294
+    },
+    "decision_tree": {
+      "stayed_kept": 778,
+      "wasted_offers": 257,
+      "missed_churners": 82,
+      "churners_caught": 292
+    }
+  },
+  "top_coefficients": {
+    "tenure": -1.252,
+    "InternetService_No": -1.233,
+    "Contract_Two year": -0.894,
+    "InternetService_Fiber optic": 0.774,
+    "TotalCharges": 0.527,
+    "Contract_Month-to-month": 0.455,
+    "PhoneService_Yes": -0.394,
+    "OnlineSecurity_Yes": -0.387,
+    "PaperlessBilling_Yes": 0.372,
+    "TechSupport_Yes": -0.337
+  },
+  "top_importances": {
+    "Contract_Month-to-month": 0.588,
+    "tenure": 0.109,
+    "InternetService_Fiber optic": 0.104,
+    "MonthlyCharges": 0.065,
+    "TotalCharges": 0.026,
+    "Contract_Two year": 0.025,
+    "PaymentMethod_Electronic check": 0.018,
+    "InternetService_No": 0.014,
+    "StreamingMovies_Yes": 0.014,
+    "PhoneService_Yes": 0.011
+  },
+  "unused_by_tree": [
+    "Contract_One year",
+    "DeviceProtection_Yes",
+    "Partner_Yes",
+    "PaymentMethod_Bank transfer (automatic)",
+    "PaymentMethod_Credit card (automatic)",
+    "PaymentMethod_Mailed check",
+    "StreamingTV_Yes",
+    "TechSupport_Yes"
+  ]
+}

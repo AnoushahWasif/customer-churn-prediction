@@ -13,6 +13,7 @@ INK, MUTED, GRID = "#0b0b0b", "#52514e", "#e6e5e1"
 
 
 def _style(ax) -> None:
+    ax.set_axisbelow(True)
     ax.grid(color=GRID, lw=0.8)
     ax.tick_params(colors=MUTED)
     for side in ("top", "right"):
@@ -71,6 +72,67 @@ def plot_tree_top(model: Pipeline, path: Path, depth: int = 2) -> None:
         fontsize=8,
         ax=ax,
     )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.tight_layout()
+    fig.savefig(path)
+    plt.close(fig)
+
+
+RAISES, LOWERS = "#e34948", "#2a78d6"
+
+
+def plot_roc_pr(y_true, scores_by_model: dict, path: Path) -> None:
+    """ROC and precision-recall curves side by side, one line per model."""
+    from sklearn.metrics import precision_recall_curve, roc_curve
+
+    if len(scores_by_model) > len(SERIES):
+        raise ValueError(f"At most {len(SERIES)} models per chart")
+    fig, (roc_ax, pr_ax) = plt.subplots(1, 2, figsize=(10, 4.2), dpi=150)
+    base_rate = float(np.mean(y_true))
+    for color, (name, scores) in zip(SERIES, scores_by_model.items(), strict=False):
+        fpr, tpr, _ = roc_curve(y_true, scores)
+        roc_ax.plot(fpr, tpr, color=color, lw=2, label=name)
+        precision, recall, _ = precision_recall_curve(y_true, scores)
+        pr_ax.plot(recall, precision, color=color, lw=2, label=name)
+
+    roc_ax.plot([0, 1], [0, 1], color=MUTED, lw=1, ls="--")
+    roc_ax.text(0.55, 0.45, "random guess", color=MUTED, fontsize=8, rotation=33)
+    pr_ax.axhline(base_rate, color=MUTED, lw=1, ls="--")
+    pr_ax.text(0.02, base_rate + 0.02, f"churn rate {base_rate:.0%}", color=MUTED, fontsize=8)
+    roc_ax.set(xlabel="Customers who stay, flagged anyway", ylabel="Churners caught")
+    pr_ax.set(xlabel="Churners caught (recall)", ylabel="Flagged customers who churn (precision)")
+    roc_ax.set_title("ROC", color=INK, loc="left")
+    pr_ax.set_title("Precision-recall", color=INK, loc="left")
+    for ax in (roc_ax, pr_ax):
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1.02)
+        ax.xaxis.label.set_color(MUTED)
+        ax.yaxis.label.set_color(MUTED)
+        _style(ax)
+    pr_ax.legend(frameon=False, fontsize=8, loc="upper right")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.tight_layout()
+    fig.savefig(path)
+    plt.close(fig)
+
+
+def plot_drivers(coefs, importances, path: Path) -> None:
+    """What each model leans on: signed LR weights next to tree importances."""
+    fig, (lr_ax, tree_ax) = plt.subplots(1, 2, figsize=(11, 4.6), dpi=150)
+    c = coefs.iloc[::-1]
+    lr_ax.barh(c.index, c.values, color=[RAISES if v > 0 else LOWERS for v in c.values], height=0.6)
+    lr_ax.axvline(0, color=MUTED, lw=1)
+    lr_ax.set_title("Logistic regression: weight per feature", color=INK, loc="left", fontsize=10)
+    lr_ax.set_xlabel("← lowers churn      raises churn →", color=MUTED)
+
+    i = importances.iloc[::-1]
+    tree_ax.barh(i.index, i.values, color=SERIES[2], height=0.6)
+    tree_ax.set_title("Decision tree: share of splits' gain", color=INK, loc="left", fontsize=10)
+    tree_ax.set_xlabel("Importance (sums to 1 over all features)", color=MUTED)
+    for ax in (lr_ax, tree_ax):
+        ax.tick_params(labelsize=8)
+        _style(ax)
+        ax.grid(axis="y", visible=False)
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
     fig.savefig(path)
