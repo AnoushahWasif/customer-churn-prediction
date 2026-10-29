@@ -137,3 +137,37 @@ def plot_drivers(coefs, importances, path: Path) -> None:
     fig.tight_layout()
     fig.savefig(path)
     plt.close(fig)
+
+
+def plot_cost_curves(curves: dict, picked: dict[str, float], path: Path) -> None:
+    """Cost per customer against threshold; dots where each model's threshold was picked."""
+    if len(curves) > len(SERIES):
+        raise ValueError(f"At most {len(SERIES)} models per chart")
+    fig, ax = plt.subplots(figsize=(7.5, 4.4), dpi=150)
+    for color, (name, (thresholds, cost)) in zip(SERIES, curves.items(), strict=False):
+        # Cost only changes at a customer's score, so draw steps (the tree has few distinct
+        # scores, and a sloped line between them would show costs no threshold gives).
+        # Past the highest score nobody gets an offer, which is the last cost.
+        keep = thresholds <= 1.0
+        x, y = np.append(thresholds[keep], 1.0), np.append(cost[keep], cost[-1])
+        ax.step(x, y, where="pre", color=color, lw=2, label=name)
+        if name in picked:
+            i = min(np.searchsorted(thresholds, picked[name]), len(cost) - 1)
+            ax.plot(picked[name], cost[i], "o", color=color, ms=7, mec="white", mew=1.5)
+    ax.axvline(0.5, color=MUTED, lw=1, ls="--")
+    ax.text(0.505, ax.get_ylim()[1] * 0.97, "default 0.5", color=MUTED, fontsize=8, va="top")
+    ax.set_xlim(0, 1)
+    ax.set_xlabel("Threshold (offer a discount when score is at or above it)", color=MUTED)
+    ax.set_ylabel("Cost per test customer", color=MUTED)
+    ax.set_title(
+        "Cost of offers and missed churners on the test set (dots: picked on training folds)",
+        color=INK,
+        loc="left",
+        fontsize=10,
+    )
+    ax.legend(frameon=False, fontsize=8, loc="upper left")
+    _style(ax)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.tight_layout()
+    fig.savefig(path)
+    plt.close(fig)

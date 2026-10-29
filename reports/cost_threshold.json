@@ -1,0 +1,150 @@
+{
+  "costs": {
+    "offer": 1.0,
+    "missed": 5.0
+  },
+  "bayes_threshold": 0.2,
+  "offer_everyone_cost": 1409.0,
+  "offer_nobody_cost": 1870.0,
+  "models": {
+    "logistic_regression": {
+      "threshold": 0.175,
+      "at_threshold": {
+        "stayed_kept": 628,
+        "wasted_offers": 407,
+        "missed_churners": 39,
+        "churners_caught": 335
+      },
+      "at_0.5": {
+        "stayed_kept": 926,
+        "wasted_offers": 109,
+        "missed_churners": 166,
+        "churners_caught": 208
+      },
+      "test_cost": 937.0,
+      "test_cost_at_0.5": 1147.0,
+      "by_cost_ratio": {
+        "2": {
+          "threshold": 0.56,
+          "cost_per_customer": 0.468
+        },
+        "3": {
+          "threshold": 0.327,
+          "cost_per_customer": 0.576
+        },
+        "5": {
+          "threshold": 0.175,
+          "cost_per_customer": 0.665
+        },
+        "10": {
+          "threshold": 0.137,
+          "cost_per_customer": 0.768
+        },
+        "20": {
+          "threshold": 0.048,
+          "cost_per_customer": 0.808
+        }
+      }
+    },
+    "logistic_regression_balanced": {
+      "threshold": 0.377,
+      "at_threshold": {
+        "stayed_kept": 634,
+        "wasted_offers": 401,
+        "missed_churners": 40,
+        "churners_caught": 334
+      },
+      "at_0.5": {
+        "stayed_kept": 748,
+        "wasted_offers": 287,
+        "missed_churners": 80,
+        "churners_caught": 294
+      },
+      "test_cost": 935.0,
+      "test_cost_at_0.5": 981.0,
+      "by_cost_ratio": {
+        "2": {
+          "threshold": 0.777,
+          "cost_per_customer": 0.466
+        },
+        "3": {
+          "threshold": 0.604,
+          "cost_per_customer": 0.581
+        },
+        "5": {
+          "threshold": 0.377,
+          "cost_per_customer": 0.664
+        },
+        "10": {
+          "threshold": 0.183,
+          "cost_per_customer": 0.749
+        },
+        "20": {
+          "threshold": 0.161,
+          "cost_per_customer": 0.825
+        }
+      }
+    },
+    "decision_tree": {
+      "threshold": 0.409,
+      "at_threshold": {
+        "stayed_kept": 662,
+        "wasted_offers": 373,
+        "missed_churners": 57,
+        "churners_caught": 317
+      },
+      "at_0.5": {
+        "stayed_kept": 778,
+        "wasted_offers": 257,
+        "missed_churners": 82,
+        "churners_caught": 292
+      },
+      "test_cost": 975.0,
+      "test_cost_at_0.5": 959.0,
+      "by_cost_ratio": {
+        "2": {
+          "threshold": 0.789,
+          "cost_per_customer": 0.474
+        },
+        "3": {
+          "threshold": 0.606,
+          "cost_per_customer": 0.562
+        },
+        "5": {
+          "threshold": 0.409,
+          "cost_per_customer": 0.692
+        },
+        "10": {
+          "threshold": 0.231,
+          "cost_per_customer": 0.781
+        },
+        "20": {
+          "threshold": 0.065,
+          "cost_per_customer": 0.839
+        }
+      }
+    }
+  },
+  "errors": {
+    "churners": 374,
+    "missed_by_all": 31,
+    "missed_by_some": 34,
+    "caught_by_all": 309,
+    "profile_missed_by_all": {
+      "customers": 31,
+      "month_to_month": 0.323,
+      "fiber": 0.29,
+      "electronic_check": 0.226,
+      "median_tenure_months": 45.0,
+      "median_monthly_charge": 67.5
+    },
+    "profile_caught_by_all": {
+      "customers": 309,
+      "month_to_month": 0.977,
+      "fiber": 0.731,
+      "electronic_check": 0.605,
+      "median_tenure_months": 5.0,
+      "median_monthly_charge": 76.65
+    }
+  }
+}
