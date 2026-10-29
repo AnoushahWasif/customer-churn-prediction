@@ -52,15 +52,17 @@ def tune_tree(X_train, y_train, grid: dict = TREE_GRID, folds: int = 5) -> GridS
     return search.fit(X_train, y_train)
 
 
-def run() -> pd.DataFrame:
-    X_train, X_test, y_train, y_test = split(load())
-    fitted = {}
-    for name, model in models().items():
-        fitted[name] = model.fit(X_train, y_train)
-
+def fit_all(df: pd.DataFrame | None = None):
+    """Every model fitted on the same training rows; returns them with the untouched test set."""
+    X_train, X_test, y_train, y_test = split(load() if df is None else df)
+    fitted = {name: model.fit(X_train, y_train) for name, model in models().items()}
     search = tune_tree(X_train, y_train)
     fitted["decision_tree"] = search.best_estimator_
+    return fitted, search, X_test, y_test
 
+
+def run() -> pd.DataFrame:
+    fitted, search, X_test, y_test = fit_all()
     rows = []
     for name, model in fitted.items():
         scores = model.predict_proba(X_test)[:, 1]

@@ -44,6 +44,29 @@ A tree allowed to split down to single customers scores 0.66 in cross-validation
 
 The first splits are the same drivers the EDA found: contract type, then monthly charges or fiber internet, then tenure. The tree catches about as many churners as balanced logistic regression with 30 fewer wasted offers, but ranks customers slightly worse overall (ROC-AUC 0.838 vs 0.842). The `value` pairs in the plot are class-weighted, so they read as balanced proportions, not raw counts.
 
+### Comparing the three models
+
+![ROC and precision-recall curves](reports/figures/roc_pr.png)
+
+- Plain and class-balanced logistic regression draw **the same curve**. Balancing moves where the 0.5 cut falls, not the order customers are ranked in, so it changes the confusion matrix but not ROC-AUC.
+- The tree is close everywhere and slightly ahead only at the very top of the list (the few customers it's most sure about).
+
+At the 0.5 threshold, out of 1,409 test customers:
+
+| Model | Churners caught | Missed | Wasted offers | Stayed, left alone |
+|-------|-----------------|--------|---------------|--------------------|
+| Logistic regression | 208 | 166 | 109 | 926 |
+| Logistic regression, balanced | 294 | 80 | 287 | 748 |
+| Decision tree | 292 | 82 | 257 | 778 |
+
+What each model leans on:
+
+![Logistic regression weights next to tree importances](reports/figures/drivers.png)
+
+- Both agree on the big three: contract type, tenure and fiber internet.
+- The tree puts 59% of its weight on "month-to-month" alone and never uses 8 of its 27 inputs (partner, one-year contract, three payment methods, among others).
+- Logistic regression gives `TotalCharges` a *positive* weight, which reads as "paying more in total means more churn". That's misleading on its own: total charges is roughly tenure × monthly charge, and with tenure already in the model (−1.25) the two weights partly cancel. Correlated inputs make single coefficients hard to read; the tree's split on tenure is the plainer story.
+
 ## Plan
 
 - [x] Download script and data dictionary
@@ -51,7 +74,7 @@ The first splits are the same drivers the EDA found: contract type, then monthly
 - [x] Preprocessing pipeline (`ColumnTransformer`) with tests
 - [x] Baseline and logistic regression
 - [x] Decision tree with cross-validated depth
-- [ ] Model comparison (ROC/PR curves, confusion matrices)
+- [x] Model comparison (ROC/PR curves, confusion matrices)
 - [ ] Cost-based threshold, and a look at the customers each model gets wrong
 - [ ] CLI and CI
 
