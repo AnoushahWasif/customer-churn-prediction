@@ -1,5 +1,7 @@
 # Customer churn prediction
 
+[![CI](https://github.com/AnoushahWasif/customer-churn-prediction/actions/workflows/ci.yml/badge.svg)](https://github.com/AnoushahWasif/customer-churn-prediction/actions/workflows/ci.yml)
+
 > Work in progress. Started October 2026.
 
 Predicting which customers of a telecom company are likely to cancel, using the public IBM Telco Customer Churn dataset (7,043 customers, 21 columns, about 26% churned).
@@ -104,6 +106,36 @@ At these thresholds, 31 of the 374 test churners are missed by all three models,
 
 The missed churners look like loyal customers: on contracts, years in, paying less. Nothing in these 19 columns warns about them, so a different model won't fix it. Catching them would need other data, such as support calls, recent price changes or usage drops.
 
+## Using it
+
+Needs Python 3.12 and [uv](https://docs.astral.sh/uv/).
+
+```bash
+make install
+make data                     # downloads the CSV, pinned to a commit and checked by SHA-256
+uv run churn train            # fits the model, picks its threshold from costs, saves models/
+uv run churn score customers.csv --out scores.csv
+uv run churn reports          # rebuilds every figure and JSON in reports/
+```
+
+`churn train --offer-cost 1 --missed-cost 10` picks the threshold for different costs. The served model is plain logistic regression: it costs about the same as the balanced one (937 vs 935 on the test set) and its scores read as probabilities.
+
+`customers.csv` needs the 19 input columns of the Telco file; `customerID` is optional. The output has one row per customer:
+
+```
+customer_id,churn_score,offer
+7590-VHVEG,0.6131,yes
+5575-GNVDE,0.0452,no
+```
+
+What `score` guards against:
+- **A swapped or corrupted model file.** `model.joblib` is a pickle, and loading a pickle runs code, so its SHA-256 is checked against `model.json` (or `--sha256` from outside) before it's opened.
+- **Bad input.** Missing columns, text or negative numbers, files over 50 MB or 200,000 rows. Each error names the column and line, and exits with code 2 without writing anything.
+- **Spreadsheet formula injection.** A customer ID starting with `=`, `+`, `-` or `@` would run as a formula when the output is opened in Excel, so it gets a leading `'`.
+- **Values never seen in training** (a new payment method, say). These are scored as "none of the known options" and the command says so.
+
+CI runs ruff and the tests, trains and scores on the real data, checks that a tampered model is refused, audits dependencies with pip-audit, and scans the history with Gitleaks.
+
 ## Plan
 
 - [x] Download script and data dictionary
@@ -113,7 +145,7 @@ The missed churners look like loyal customers: on contracts, years in, paying le
 - [x] Decision tree with cross-validated depth
 - [x] Model comparison (ROC/PR curves, confusion matrices)
 - [x] Cost-based threshold, and a look at the customers each model gets wrong
-- [ ] CLI and CI
+- [x] CLI and CI
 
 ## Stack
 

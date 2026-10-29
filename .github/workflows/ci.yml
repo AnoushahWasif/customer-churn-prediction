@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      # Tests use generated customers only, so they need no download.
+      - run: uv run pytest
+
+  end-to-end:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen --no-dev
+      # The download is pinned to a commit and checked against a SHA-256.
+      - run: uv run python -m churn.data
+      - name: Train, then score real customers
+        run: |
+          uv run churn train | tee train.json
+          python3 -c "import json; r = json.load(open('train.json')); \
+            assert r['test_cost'] < r['test_cost_at_0.5'], r"
+          head -101 data/raw/telco_churn.csv > customers.csv
+          uv run churn score customers.csv --sha256 "$(jq -r .sha256 models/model.json)" \
+            --out scores.csv
+          test "$(wc -l < scores.csv)" = "101"
+          echo "tampered" >> models/model.joblib
+          if uv run churn score customers.csv; then echo "tampered model was loaded"; exit 1; fi
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv export --format requirements-txt --no-dev --no-emit-project > requirements.txt
+      - run: uvx pip-audit -r requirements.txt --no-deps --disable-pip
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
