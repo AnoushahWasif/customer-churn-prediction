@@ -21,7 +21,7 @@ Full notebook: [notebooks/02_eda.ipynb](notebooks/02_eda.ipynb).
 
 ## Results so far
 
-Stratified 80/20 split, 1,409 test customers, 374 of them churned. Threshold 0.5 for now (Day 8 picks it from costs).
+Stratified 80/20 split, 1,409 test customers, 374 of them churned. This table uses the default 0.5 threshold; [Picking the threshold from costs](#picking-the-threshold-from-costs) below replaces it.
 
 | Model | Churners caught | Missed | Wasted offers | Accuracy | ROC-AUC |
 |-------|-----------------|--------|---------------|----------|---------|
@@ -30,7 +30,7 @@ Stratified 80/20 split, 1,409 test customers, 374 of them churned. Threshold 0.5
 | Logistic regression, class-balanced | 78.6% | 80 | 287 | 74.0% | 0.842 |
 | Decision tree, depth 6, class-balanced | 78.1% | 82 | 257 | 75.9% | 0.838 |
 
-The do-nothing baseline scores 73.5% accuracy, which is why accuracy isn't the metric here. Balancing the classes halves the missed churners at the cost of about 180 more discount offers. Whether that trade is worth it depends on what each mistake costs, which is Day 8.
+The do-nothing baseline scores 73.5% accuracy, which is why accuracy isn't the metric here. Balancing the classes halves the missed churners at the cost of about 180 more discount offers. Whether that trade is worth it depends on what each mistake costs, which is the next section.
 
 ### Decision tree
 
@@ -67,6 +67,43 @@ What each model leans on:
 - The tree puts 59% of its weight on "month-to-month" alone and never uses 8 of its 27 inputs (partner, one-year contract, three payment methods, among others).
 - Logistic regression gives `TotalCharges` a *positive* weight, which reads as "paying more in total means more churn". That's misleading on its own: total charges is roughly tenure × monthly charge, and with tenure already in the model (−1.25) the two weights partly cancel. Correlated inputs make single coefficients hard to read; the tree's split on tenure is the plainer story.
 
+## Picking the threshold from costs
+
+**The assumption:** a retention offer (a discount) costs 1 unit, and losing a customer costs 5. Every offer is paid for, including the ones that go to customers who were going to leave anyway. These numbers aren't from a real company; they're stated so they can be changed (`churn.threshold.Costs`), and the table further down shows how the answer moves with them.
+
+Each model's threshold is picked on out-of-fold scores from the training set (5 folds, every customer scored by a model that never saw them). The test set is only used to report what that choice costs.
+
+![Cost per customer against threshold](reports/figures/cost_curve.png)
+
+Cost on the 1,409 test customers (lower is better):
+
+| | Threshold | Churners caught | Wasted offers | Cost | Cost at 0.5 |
+|---|---|---|---|---|---|
+| Offer nobody | | 0 | 0 | 1,870 | |
+| Offer everyone | | 374 | 1,035 | 1,409 | |
+| Logistic regression | 0.175 | 335 | 407 | **937** | 1,147 |
+| Logistic regression, balanced | 0.377 | 334 | 401 | **935** | 981 |
+| Decision tree | 0.409 | 317 | 373 | 975 | 959 |
+
+- **Once the threshold comes from costs, class balancing stops mattering.** Plain and balanced logistic regression end up making almost the same decisions (937 vs 935). Balancing only moved where 0.5 falls; the cost-picked threshold moves it back.
+- **Plain logistic regression's threshold lands close to theory.** If scores were true probabilities, the best cut would be offer ÷ missed = 0.2 at these costs. It picked 0.175, and across cost ratios it stays near that line (2:1 → 0.56 vs 0.5, 3:1 → 0.33 vs 0.33, 10:1 → 0.14 vs 0.10, 20:1 → 0.05 vs 0.05). Balanced scores aren't probabilities, so its threshold can only be found by search.
+- **The tree's picked threshold did slightly worse than 0.5 on the test set** (975 vs 959). A depth-6 tree gives only 46 distinct scores on the test set, so its cost moves in big steps and a threshold that was best on the training folds can sit on the wrong side of a step for new customers. The two logistic regressions have smooth curves and transfer well.
+- Against simply offering everyone a discount, the best model saves about a third (1,409 → 935).
+
+### The churners every model misses
+
+At these thresholds, 31 of the 374 test churners are missed by all three models, 34 by some, and 309 are caught by all.
+
+| | Missed by all (31) | Caught by all (309) |
+|---|---|---|
+| Month-to-month contract | 32% | 98% |
+| Fiber internet | 29% | 73% |
+| Pays by electronic check | 23% | 61% |
+| Median tenure | 45 months | 5 months |
+| Median monthly charge | 67.50 | 76.65 |
+
+The missed churners look like loyal customers: on contracts, years in, paying less. Nothing in these 19 columns warns about them, so a different model won't fix it. Catching them would need other data, such as support calls, recent price changes or usage drops.
+
 ## Plan
 
 - [x] Download script and data dictionary
@@ -75,7 +112,7 @@ What each model leans on:
 - [x] Baseline and logistic regression
 - [x] Decision tree with cross-validated depth
 - [x] Model comparison (ROC/PR curves, confusion matrices)
-- [ ] Cost-based threshold, and a look at the customers each model gets wrong
+- [x] Cost-based threshold, and a look at the customers each model gets wrong
 - [ ] CLI and CI
 
 ## Stack
